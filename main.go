@@ -1,7 +1,7 @@
 package main
 
 import (
-	"main/ui/console"
+	"wordlego/ui/console"
 )
 
 func main() {

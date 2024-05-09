@@ -2,7 +2,7 @@ package console
 
 import (
 	"fmt"
-	"main/logic"
+	"wordlego/logic"
 )
 
 func Console_main() {
