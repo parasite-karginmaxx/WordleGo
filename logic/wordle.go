@@ -25,30 +25,43 @@ func NewWordleGame(secretWord string, maxGuesses int) *WordleGame {
 	}
 }
 
-// func (wg *WordleGame) hint(guess string) string {
-// 	var builder strings.Builder
-// 	for i, ch := range wg.secretWord {
-// 		if strings.ContainsRune(guess, ch) {
-// 			builder.WriteRune(ch)
-// 		} else {
-// 			builder.WriteRune('_')
-// 		}
-// 		if i < len(wg.secretWord)-1 {
-// 			builder.WriteRune(' ')
-// 		}
-// 	}
-// 	return builder.String()
-// }
+func GetFilledSymbols(secretWord string, guess string) [WORD_LENGTH]string {
+	color_vector := [WORD_LENGTH]string{}
+	for i := range color_vector {
+		color_vector[i] = "Gray"
+	}
+	// stores whether an index is allowed to cause another index to be yellow
+	yellow_lock := [WORD_LENGTH]bool{}
+
+	for j, guess_letter := range guess {
+		for k, letter := range secretWord {
+			if guess_letter == letter && j == k {
+				color_vector[j] = "Green"
+				// now the kth index can no longer cause another index to be yellow
+				yellow_lock[k] = true
+				break
+			}
+		}
+	}
+	for j, guess_letter := range guess {
+		for k, letter := range secretWord {
+			if guess_letter == letter && color_vector[j] != "Green" && !yellow_lock[k] {
+				color_vector[j] = "Yellow"
+				yellow_lock[k] = true
+			}
+		}
+	}
+	return color_vector
+}
 
 func (wg *WordleGame) Start() {
 	fmt.Println("Добро пожаловать в игру Wordle!")
-	// fmt.Println(wg.secretWord)
-	fmt.Printf("Угадайте слово из %d букв.\n", len(wg.secretWord)/2)
+	fmt.Printf("Угадайте слово из 5 букв.\n")
 	for {
 		if wg.guesses >= wg.maxGuesses {
 			fmt.Println("У вас закончились попытки. Загаданное слово было:")
-			color_vector := get_filled_color_vector("Green")
-			display_word(wg.secretWord, color_vector)
+			color_vector := GetFilledSymbols(wg.secretWord, wg.secretWord)
+			DisplayWord(wg.secretWord, color_vector)
 			return
 		}
 
@@ -57,44 +70,20 @@ func (wg *WordleGame) Start() {
 		fmt.Scanln(&guess)
 		guess = strings.ToLower(guess)
 
-		if len(guess) != len(wg.secretWord) {
-			fmt.Printf("Пожалуйста, введите слово из %d букв.\n", len(wg.secretWord)/2)
+		if len(guess) != WORD_LENGTH {
+			fmt.Printf("Пожалуйста, введите слово из 5 букв.\n")
 			continue
 		}
 
 		wg.guesses++
 		if guess == wg.secretWord {
 			fmt.Println("Поздравляем! Вы угадали слово!")
-			color_vector := get_filled_color_vector("Green")
-			display_word(wg.secretWord, color_vector)
+			color_vector := GetFilledSymbols(wg.secretWord, guess)
+			DisplayWord(wg.secretWord, color_vector)
 			return
 		} else {
-			//fmt.Printf("Ваше предположение не верно. Подсказка: %s\n", wg.hint(guess))
-			color_vector := get_filled_color_vector("Grey")
-
-			// stores whether an index is allowed to cause another index to be yellow
-			yellow_lock := [WORD_LENGTH]bool{}
-
-			for j, guess_letter := range guess {
-				for k, letter := range wg.secretWord {
-					if guess_letter == letter && j == k {
-						color_vector[j] = "Green"
-						// now the kth index can no longer cause another index to be yellow
-						yellow_lock[k] = true
-						break
-
-					}
-				}
-			}
-			for j, guess_letter := range guess {
-				for k, letter := range wg.secretWord {
-					if guess_letter == letter && color_vector[j] != "Green" && !yellow_lock[k] {
-						color_vector[j] = "Yellow"
-						yellow_lock[k] = true
-					}
-				}
-			}
-			display_word(guess, color_vector)
+			color_vector := GetFilledSymbols(wg.secretWord, guess)
+			DisplayWord(guess, color_vector)
 		}
 	}
 }
@@ -120,15 +109,7 @@ func RandomWord(words []string) string {
 	return words[rand.Intn(len(words))]
 }
 
-func get_filled_color_vector(color string) [WORD_LENGTH]string {
-	color_vector := [WORD_LENGTH]string{}
-	for i := range color_vector {
-		color_vector[i] = color
-	}
-	return color_vector
-}
-
-func display_word(word string, color_vector [WORD_LENGTH]string) {
+func DisplayWord(word string, color_vector [WORD_LENGTH]string) {
 	for i, c := range word {
 		switch color_vector[i] {
 		case "Green":
