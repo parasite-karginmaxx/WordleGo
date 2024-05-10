@@ -74,17 +74,17 @@ func TakeUserInput() string {
 }
 
 func (wg *WordleGame) Start() {
+	fmt.Println("Добро пожаловать в игру Wordle!")
+	fmt.Printf("Угадайте слово из 5 букв.\n")
 	for {
 		guess := ""
 		if wg.guesses == wg.maxGuesses {
 			DisplayWord(wg.WrongGuess(guess))
 			break
 		} else {
-			fmt.Println("Добро пожаловать в игру Wordle!")
-			fmt.Printf("Угадайте слово из 5 букв.\n")
 			fmt.Printf("Попытка #%d. Введите ваше предположение: ", wg.guesses+1)
-
 			guess = TakeUserInput()
+
 			if len(guess) != WORD_LENGTH {
 				fmt.Printf("Пожалуйста, введите слово из 5 букв.\n")
 				continue
