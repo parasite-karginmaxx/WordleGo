@@ -30,21 +30,17 @@ func GetFilledSymbols(secretWord string, guess string) [WORD_LENGTH]string {
 	for i := range color_vector {
 		color_vector[i] = "Gray"
 	}
-	// stores whether an index is allowed to cause another index to be yellow
+	// сохраняет, разрешено ли индексу вызывать желтый цвет другого индекса
 	yellow_lock := [WORD_LENGTH]bool{}
 
 	for j, guess_letter := range guess {
 		for k, letter := range secretWord {
 			if guess_letter == letter && j == k {
 				color_vector[j] = "Green"
-				// now the kth index can no longer cause another index to be yellow
+				// теперь k-й индекс больше не может вызывать желтый цвет другого индекса
 				yellow_lock[k] = true
 				break
 			}
-		}
-	}
-	for j, guess_letter := range guess {
-		for k, letter := range secretWord {
 			if guess_letter == letter && color_vector[j] != "Green" && !yellow_lock[k] {
 				color_vector[j] = "Yellow"
 				yellow_lock[k] = true
@@ -54,36 +50,48 @@ func GetFilledSymbols(secretWord string, guess string) [WORD_LENGTH]string {
 	return color_vector
 }
 
+func (wg WordleGame) IsGuessCorrect(guess string) (string, [WORD_LENGTH]string) {
+	if guess == wg.secretWord {
+		fmt.Println("Поздравляем! Вы угадали слово!")
+		color_vector := GetFilledSymbols(wg.secretWord, guess)
+		return strings.ToUpper(wg.secretWord), color_vector
+	} else {
+		color_vector := GetFilledSymbols(wg.secretWord, guess)
+		return strings.ToUpper(guess), color_vector
+	}
+}
+
+func (wg WordleGame) WrongGuess(guess string) (string, [WORD_LENGTH]string) {
+	fmt.Println("У вас закончились попытки. Загаданное слово было:")
+	color_vector := GetFilledSymbols(wg.secretWord, wg.secretWord)
+	return strings.ToUpper(wg.secretWord), color_vector
+}
+
+func TakeUserInput() string {
+	var guess string
+	fmt.Scanln(&guess)
+	return strings.ToLower(guess)
+}
+
 func (wg *WordleGame) Start() {
-	fmt.Println("Добро пожаловать в игру Wordle!")
-	fmt.Printf("Угадайте слово из 5 букв.\n")
 	for {
-		if wg.guesses >= wg.maxGuesses {
-			fmt.Println("У вас закончились попытки. Загаданное слово было:")
-			color_vector := GetFilledSymbols(wg.secretWord, wg.secretWord)
-			DisplayWord(wg.secretWord, color_vector)
-			return
-		}
-
-		fmt.Printf("Попытка #%d. Введите ваше предположение: ", wg.guesses+1)
-		var guess string
-		fmt.Scanln(&guess)
-		guess = strings.ToLower(guess)
-
-		if len(guess) != WORD_LENGTH {
-			fmt.Printf("Пожалуйста, введите слово из 5 букв.\n")
-			continue
-		}
-
-		wg.guesses++
-		if guess == wg.secretWord {
-			fmt.Println("Поздравляем! Вы угадали слово!")
-			color_vector := GetFilledSymbols(wg.secretWord, guess)
-			DisplayWord(wg.secretWord, color_vector)
-			return
+		guess := ""
+		if wg.guesses == wg.maxGuesses {
+			DisplayWord(wg.WrongGuess(guess))
+			break
 		} else {
-			color_vector := GetFilledSymbols(wg.secretWord, guess)
-			DisplayWord(guess, color_vector)
+			fmt.Println("Добро пожаловать в игру Wordle!")
+			fmt.Printf("Угадайте слово из 5 букв.\n")
+			fmt.Printf("Попытка #%d. Введите ваше предположение: ", wg.guesses+1)
+
+			guess = TakeUserInput()
+			if len(guess) != WORD_LENGTH {
+				fmt.Printf("Пожалуйста, введите слово из 5 букв.\n")
+				continue
+			} else if wg.guesses < wg.maxGuesses {
+				DisplayWord(wg.IsGuessCorrect(guess))
+				wg.guesses++
+			}
 		}
 	}
 }
@@ -116,7 +124,7 @@ func DisplayWord(word string, color_vector [WORD_LENGTH]string) {
 			fmt.Print("\033[42m\033[1;30m")
 		case "Yellow":
 			fmt.Print("\033[43m\033[1;30m")
-		case "Grey":
+		case "Gray":
 			fmt.Print("\033[40m\033[1;37m")
 		}
 		fmt.Printf(" %c ", c)
